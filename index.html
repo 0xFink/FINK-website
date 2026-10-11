@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FT/PdvTvokJEFzO/bvDEw/lwFPegbXIHrZoEgnW9KTk='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DOG5W5+fH0gArHSWBZ5BMFHJyeq2qTqggX3lLsNr/9k='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -615,7 +615,7 @@
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 })();
 
-/* ---------------- sacred geometry: hexagons unfolding into icosahedrons ----------------
+/* ---------------- sacred geometry: neon hexagons unfolding into icosahedrons, bouncing around ----------------
    Viewed straight down a 3-fold axis, an icosahedron's outline IS a hexagon.
    Each shape is born as that flat hexagon, its inner triangle lattice fades in,
    then it tilts off-axis and tumbles as a full icosahedron before fading out.        */
@@ -649,27 +649,33 @@
   const hullEdge=edges.map(([a,b])=>hull.has(a)&&hull.has(b)&&Math.abs(V[a][2])<.99&&Math.abs(V[b][2])<.99);
   const hexOrder=byR.slice().sort((a,b)=>Math.atan2(V[a][1],V[a][0])-Math.atan2(V[b][1],V[b][0]));
 
-  const COLORS=['212,175,55','212,175,55','240,210,122','61,220,132','224,69,58'];
-  let W,H,DPR,shapes=[];
+  // iridescent neon palette sampled from the gem-hexagon artwork: magenta → pink → diamond white → sky → azure → sapphire
+  const PAL=[[255,42,138],[255,79,200],[236,246,255],[92,208,255],[74,168,255],[61,92,255]];
+  const iri=t=>{t=((t%1)+1)%1*PAL.length;const i=Math.floor(t),f=t-i,a=PAL[i],b=PAL[(i+1)%PAL.length];
+    return[a[0]+(b[0]-a[0])*f|0,a[1]+(b[1]-a[1])*f|0,a[2]+(b[2]-a[2])*f|0];};
+  let W,H,DPR,shapes=[],clock=0;
   const W0=()=>cv.clientWidth||innerWidth;
   const rnd=(a,b)=>a+Math.random()*(b-a);
+  function orient(s,fresh){
+    s.age=fresh?rnd(0,30):0; s.life=rnd(32,58);
+    s.wx=rnd(-.35,.35); s.wy=rnd(.15,.4)*(Math.random()<.5?-1:1); s.wz=rnd(-.12,.12);
+    s.z0=rnd(0,Math.PI*2); s.spin=rnd(-.08,.08);
+  }
   function make(fresh){
-    return{
-      x:rnd(0,W),y:rnd(0,H),vx:rnd(-.12,.12),vy:rnd(-.1,.1),
-      r:rnd(45,Math.min(170,Math.max(70,W*.11))),
-      c:COLORS[Math.floor(Math.random()*COLORS.length)],
-      age:fresh?rnd(0,30):0,life:rnd(32,58),
-      wx:rnd(-.35,.35),wy:rnd(.15,.4)*(Math.random()<.5?-1:1),wz:rnd(-.12,.12),
-      z0:rnd(0,Math.PI*2),spin:rnd(-.06,.06)
-    };
+    const r=rnd(40,Math.min(150,Math.max(62,W*.1)));
+    const ang=rnd(0,Math.PI*2), sp=rnd(22,62);          // px per second, any direction
+    const s={r,x:rnd(r,Math.max(r+1,W-r)),y:rnd(r,Math.max(r+1,H-r)),vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,
+             h:Math.random(), hs:rnd(.03,.07)*(Math.random()<.5?-1:1)};
+    orient(s,fresh); return s;
   }
   function resize(){
     DPR=Math.min(window.devicePixelRatio||1,W0()<700?1.5:2);
     W=cv.clientWidth;H=cv.clientHeight;
     cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);
-    const count=W<700?6:Math.round(Math.min(18,Math.max(7,W*H/85000)));
+    const count=W<700?6:Math.round(Math.min(13,Math.max(7,W*H/100000)));
     while(shapes.length<count)shapes.push(make(true));
     shapes.length=count;
+    shapes.forEach(s=>{s.x=Math.min(Math.max(s.x,s.r),Math.max(s.r,W-s.r));s.y=Math.min(Math.max(s.y,s.r),Math.max(s.r,H-s.r));});
   }
   const smooth=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
   function rot(p,ax,ay,az){
@@ -678,6 +684,14 @@
     c=Math.cos(ay);s=Math.sin(ay);t=x*c+z*s;z=-x*s+z*c;x=t;
     c=Math.cos(az);s=Math.sin(az);t=x*c-y*s;y=x*s+y*c;x=t;
     return[x,y,z];
+  }
+  const big=()=>W>=700;
+  function stroke(x1,y1,x2,y2,c1,c2,al){
+    // full gradient on desktop; single blended colour on phones (cheaper)
+    if(big()){const g=cx.createLinearGradient(x1,y1,x2,y2);g.addColorStop(0,`rgb(${c1})`);g.addColorStop(1,`rgb(${c2})`);cx.strokeStyle=g;}
+    else cx.strokeStyle=`rgb(${c1})`;
+    cx.globalAlpha=al*.24;cx.lineWidth=big()?4.2:3.4;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+    cx.globalAlpha=al;cx.lineWidth=1.15;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
   }
   function draw(s){
     const L=s.age/s.life;
@@ -690,39 +704,56 @@
       const q=rot(p,ax,ay,az),k=1/(1-q[2]*.28*m);
       return[s.x+q[0]*s.r*k,s.y+q[1]*s.r*k,q[2]];
     });
-    const A=.42*fade;
-    cx.lineWidth=1;
-    // inner hexagon echo (lattice feel) while still a hexagon
+    // per-vertex iridescent colour: shifts with time, position around the shape and depth
+    const C=P.map(p=>iri(s.h+clock*s.hs+Math.atan2(p[1]-s.y,p[0]-s.x)/(Math.PI*2)*.55+p[2]*.12).join(','));
+    const A=.56*fade;
     if(m<1){
-      cx.strokeStyle=`rgba(${s.c},${A*(1-m)*.55})`;
-      cx.beginPath();
-      hexOrder.forEach((i,k)=>{const x=s.x+(P[i][0]-s.x)*.5,y=s.y+(P[i][1]-s.y)*.5;k?cx.lineTo(x,y):cx.moveTo(x,y)});
-      cx.closePath();cx.stroke();
+      for(let k=0;k<6;k++){const i=hexOrder[k],j=hexOrder[(k+1)%6];
+        stroke(s.x+(P[i][0]-s.x)*.5,s.y+(P[i][1]-s.y)*.5,s.x+(P[j][0]-s.x)*.5,s.y+(P[j][1]-s.y)*.5,C[i],C[j],A*(1-m)*.5);}
     }
     edges.forEach(([a,b],e)=>{
       const depth=(P[a][2]+P[b][2])/2;            // -1 back .. 1 front
       let al=hullEdge[e]?A:A*m;
-      al*=1-m*.45*(1-(depth+1)/2);
-      if(al<.01)return;
-      cx.strokeStyle=`rgba(${s.c},${al})`;
-      cx.beginPath();cx.moveTo(P[a][0],P[a][1]);cx.lineTo(P[b][0],P[b][1]);cx.stroke();
+      al*=1-m*.5*(1-(depth+1)/2);
+      if(al<.015)return;
+      stroke(P[a][0],P[a][1],P[b][0],P[b][1],C[a],C[b],al);
     });
     if(m>.5){
-      cx.fillStyle=`rgba(${s.c},${A*(m-.5)*1.6})`;
-      P.forEach(p=>{cx.beginPath();cx.arc(p[0],p[1],1.4,0,6.283);cx.fill()});
+      P.forEach((p,i)=>{cx.globalAlpha=A*(m-.5)*1.8;cx.fillStyle=`rgb(${C[i]})`;cx.beginPath();cx.arc(p[0],p[1],1.6,0,6.283);cx.fill();});
+    }
+    cx.globalAlpha=1;
+  }
+  function physics(dt){
+    shapes.forEach(s=>{
+      s.x+=s.vx*dt; s.y+=s.vy*dt;
+      const r=s.r*.95;
+      if(s.x<r){s.x=r;s.vx=Math.abs(s.vx);s.spin+=rnd(-.05,.05);}
+      if(s.x>W-r){s.x=W-r;s.vx=-Math.abs(s.vx);s.spin+=rnd(-.05,.05);}
+      if(s.y<r){s.y=r;s.vy=Math.abs(s.vy);s.spin+=rnd(-.05,.05);}
+      if(s.y>H-r){s.y=H-r;s.vy=-Math.abs(s.vy);s.spin+=rnd(-.05,.05);}
+      s.spin=Math.max(-.2,Math.min(.2,s.spin));
+    });
+    // shapes bounce off each other (elastic, mass ~ size²)
+    for(let i=0;i<shapes.length;i++)for(let j=i+1;j<shapes.length;j++){
+      const a=shapes[i],b=shapes[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=(a.r+b.r)*.82;
+      if(d>0&&d<min){
+        const nx=dx/d,ny=dy/d,ma=a.r*a.r,mb=b.r*b.r,o=(min-d);
+        a.x-=nx*o*mb/(ma+mb); a.y-=ny*o*mb/(ma+mb); b.x+=nx*o*ma/(ma+mb); b.y+=ny*o*ma/(ma+mb);
+        const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+        if(rv<0){const imp=2*rv/(ma+mb); a.vx+=imp*mb*nx; a.vy+=imp*mb*ny; b.vx-=imp*ma*nx; b.vy-=imp*ma*ny;
+          a.spin+=rnd(-.04,.04); b.spin+=rnd(-.04,.04);}
+      }
     }
   }
   let last=performance.now();
   function frame(now){
     const dt=Math.min(.05,(now-last)/1000)*(reduce?.25:1);last=now;
+    clock+=dt;
     cx.clearRect(0,0,W,H);
-    shapes.forEach((s,i)=>{
-      s.age+=dt;s.x+=s.vx*dt*60;s.y+=s.vy*dt*60;
-      const m=s.r*1.3;
-      if(s.x<-m)s.x=W+m;if(s.x>W+m)s.x=-m;if(s.y<-m)s.y=H+m;if(s.y>H+m)s.y=-m;
-      if(s.age>=s.life)shapes[i]=make(false);
-      draw(s);
-    });
+    cx.globalCompositeOperation='lighter';       // overlapping neon adds up and glows
+    physics(dt);
+    shapes.forEach(s=>{ s.age+=dt; if(s.age>=s.life) orient(s,false); draw(s); });
+    cx.globalCompositeOperation='source-over';
     requestAnimationFrame(frame);
   }
   addEventListener('resize',resize);
