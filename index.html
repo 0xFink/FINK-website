@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mjVUmxx1u0LHtLve58ehvHhCVTfNfgVBFnDYf2APyjo='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JwWHLHvjCPbKJu9mWFKNeAvCzqfdJb/LA5hQdwiDHkY='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -130,6 +130,12 @@
   .link-ic{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:#0b0d11;color:var(--gold-hi)}
   .link-ic svg{width:22px;height:22px}
   .link-ic.xx{font-family:var(--mono);font-weight:600;font-size:20px}
+  .xpost-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .xpost-head h3{margin:0}
+  .xpost-head .btn{padding:9px 14px;font-size:11px}
+  .xframe{max-width:550px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000}
+  .xframe iframe{display:block;width:100%;height:600px;border:0;color-scheme:dark}
+  .xpost-foot{text-align:center;font-size:13px;color:var(--muted);margin-top:12px}
   .portal{text-align:center;padding:52px 26px}
   .portal-ring{width:132px;height:132px;margin:0 auto 26px;position:relative}
   .portal-ring video{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover;background:#000;animation:spin 40s linear infinite;
@@ -502,6 +508,20 @@
           <div class="row"><a class="btn" href="https://x.com/0xBaalRock_FINK" target="_blank" rel="noopener noreferrer">Follow on X ↗</a><button class="btn ghost" data-copy="https://x.com/0xBaalRock_FINK">Copy Link</button></div>
         </div>
       </div>
+      <div class="card xpost" style="margin-top:16px">
+        <div class="xpost-head">
+          <h3>Latest on X</h3>
+          <a class="btn ghost" href="https://x.com/0xBaalRock_FINK" target="_blank" rel="noopener noreferrer">View all posts ↗</a>
+        </div>
+        <!-- LATEST X POST: to show a new post, replace the number after "id=" below with the new post's ID
+             (the long number at the end of the post link, e.g. x.com/0xBaalRock_FINK/status/THIS_NUMBER).
+             Also update the "Open this post" link underneath. -->
+        <div class="xframe">
+          <iframe id="xpost-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" loading="lazy" title="Latest post from @0xBaalRock_FINK on X"
+            src="https://platform.twitter.com/embed/Tweet.html?id=2109026844528070994&amp;theme=dark&amp;dnt=true&amp;hideThread=true"></iframe>
+        </div>
+        <p class="xpost-foot">Can't see the post? <a href="https://x.com/0xBaalRock_FINK/status/2109026844528070994" target="_blank" rel="noopener noreferrer">Open this post on X ↗</a></p>
+      </div>
       <div class="card" style="margin-top:16px">
         <h3>Stay Safe</h3>
         <ul class="checks">
@@ -653,6 +673,18 @@
   function tick(){coins();dex();}
   tick(); setInterval(()=>{if(!document.hidden)tick()},60000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+})();
+
+/* ---------------- latest X post: size the embed to fit the post ---------------- */
+(function(){
+  const f=document.getElementById('xpost-frame'); if(!f) return;
+  addEventListener('message',e=>{
+    if(e.origin!=='https://platform.twitter.com'||e.source!==f.contentWindow) return;
+    let d=e.data; if(typeof d==='string'){try{d=JSON.parse(d)}catch(_){return}}
+    const m=d&&d['twttr.embed']; if(!m||m.method!=='twttr.private.resize') return;
+    const hgt=+((m.params&&m.params[0])||{}).height;
+    if(hgt>80&&hgt<3000) f.style.height=Math.ceil(hgt)+'px';
+  });
 })();
 
 /* ---------------- sacred geometry: neon icosahedrons tumbling and bouncing softly off each other ----------------
