@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OPu+DcMba9a7Vm+NXrxrrgEm6URl6ZTdUYAcBcS4IzQ='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tFisGQ07O0dC3BmYRvz4Ypoc20Em9hPpSRWKi4cgE7Y='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com https://www.geckoterminal.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -170,6 +170,9 @@
   .pair-card .arr{margin-right:6px}
   .pair-card.down .arr{color:var(--red)}
   .pair-card.up .arr{color:var(--green)}
+  .chart-src{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted)}
+  .chart-src button{font:inherit;letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:2px;cursor:pointer}
+  .chart-src button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold-hi);background:rgba(212,175,55,.08)}
   .pool-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:16px}
   .pool-summary > div{background:rgba(11,13,17,.92);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
   .pool-summary .k{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
@@ -437,7 +440,7 @@
           <dt>Status</dt><dd><span class="tag g">Liquidity Locked</span><span class="tag a">Graduated</span></dd>
           <dt>Pool Address</dt><dd style="font-family:var(--mono);font-size:13.5px">0x00c7155894c7ca9a64e02dafb668adce5625cfde</dd>
         </dl>
-        <div class="chart"><iframe sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" src="https://dexscreener.com/pulsechain/0x00c7155894c7ca9a64e02dafb668adce5625cfde?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=60" title="DexScreener chart — FINK / WPLS" loading="lazy"></iframe></div>
+        <div class="chart" data-pair="0x00c7155894c7ca9a64e02dafb668adce5625cfde"></div>
         <div class="row">
           <a class="btn" href="https://dexscreener.com/pulsechain/0x00c7155894c7ca9a64e02dafb668adce5625cfde" target="_blank" rel="noopener noreferrer">Open on DexScreener ↗</a>
           <button class="btn ghost" data-copy="0x00c7155894c7ca9a64e02dafb668adce5625cfde">Copy Pool Address</button>
@@ -451,7 +454,7 @@
           <dt>Status</dt><dd><span class="tag a">Active</span></dd>
           <dt>Pool Address</dt><dd style="font-family:var(--mono);font-size:13.5px">0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8</dd>
         </dl>
-        <div class="chart"><iframe sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" src="https://dexscreener.com/pulsechain/0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=60" title="DexScreener chart — FINK / dMKT" loading="lazy"></iframe></div>
+        <div class="chart" data-pair="0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8"></div>
         <div class="row">
           <a class="btn" href="https://dexscreener.com/pulsechain/0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8" target="_blank" rel="noopener noreferrer">Open on DexScreener ↗</a>
           <button class="btn ghost" data-copy="0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8">Copy Pool Address</button>
@@ -873,11 +876,55 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
   });
 })();
 
+/* ---------------- pool charts: phone-friendly loader with DexScreener / GeckoTerminal switch ----------------
+   Charts load only once their box is actually on screen (works in every browser, unlike the
+   built-in lazy-load hint, which iPhone Safari can skip for frames built inside hidden tabs).
+   No sandbox here: DexScreener's Cloudflare check needs its own cookie, which phone browsers
+   refuse inside sandboxed frames, leaving the chart blank. The frame is still cross-origin,
+   so it can't read or change this page. */
+(function(){
+  const SRC={
+    dex:a=>'https://dexscreener.com/pulsechain/'+a+'?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=60',
+    gecko:a=>'https://www.geckoterminal.com/pulsechain/pools/'+a+'?embed=1&info=0&swaps=0&light_chart=0'
+  };
+  const ok=a=>/^0x[0-9a-f]{40}$/.test(a||'');
+  const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){io.unobserve(e.target);show(e.target);}
+  }),{rootMargin:'400px 0px'}):null;
+  function frame(box,which){
+    const a=box.dataset.pair; if(!ok(a)) return;
+    let f=box.querySelector('iframe');
+    if(!f){f=document.createElement('iframe');f.setAttribute('allow','fullscreen');f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');box.appendChild(f);}
+    f.title=(which==='gecko'?'GeckoTerminal':'DexScreener')+' chart — '+(box.dataset.label||'FINK pool');
+    f.src=SRC[which](a);
+    box.dataset.src=which;
+    const sw=box.nextElementSibling&&box.nextElementSibling.classList.contains('chart-src')?box.nextElementSibling:null;
+    if(sw) sw.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.src===which)));
+  }
+  function show(box){ frame(box,box.dataset.src||'dex'); }
+  function prep(box){
+    if(box.dataset.ready) return; box.dataset.ready='1';
+    box.dataset.pair=(box.dataset.pair||'').toLowerCase();
+    // small source switch under the chart
+    const sw=document.createElement('div'); sw.className='chart-src';
+    const lab=document.createElement('span'); lab.textContent='Chart not loading? Try:'; sw.appendChild(lab);
+    [['dex','DexScreener'],['gecko','GeckoTerminal']].forEach(([k,t])=>{
+      const b=document.createElement('button'); b.type='button'; b.dataset.src=k; b.textContent=t;
+      b.setAttribute('aria-pressed',String(k==='dex'));
+      b.addEventListener('click',()=>{ if(io) io.unobserve(box); frame(box,k); });
+      sw.appendChild(b);
+    });
+    box.after(sw);
+    if(io) io.observe(box); else show(box);
+  }
+  window.__chart=prep;
+  document.querySelectorAll('.chart[data-pair]').forEach(prep);
+})();
+
 /* ---------------- Chart & Liquidity: every FINK pool on PulseChain over $400, live from DexScreener ---------------- */
 (function(){
   const TOKEN='0x578f94f729d41983b77a07650517479e409c329b', MIN_LIQ=400;
   const NOTES={'0x00c7155894c7ca9a64e02dafb668adce5625cfde':[['Liquidity Locked','g'],['Graduated','a']]};
-  const EMB='?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=60';
   const list=document.getElementById('pool-list'); if(!list) return;
   const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||'');
   const clean=s=>String(s==null?'':s).replace(/[^\w .\-\/$+]/g,'').slice(0,16)||'?';   // token symbols are user-chosen; keep them tame
@@ -900,10 +947,7 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
     tags.appendChild(el('span','tag a',dex+(ver?' · '+ver:'')));
     (NOTES[a]||[]).forEach(([txt,k])=>tags.appendChild(el('span','tag '+k,txt)));
     t.appendChild(tags); c.appendChild(t);
-    const ch=el('div','chart'), f=document.createElement('iframe');
-    f.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
-    f.setAttribute('referrerpolicy','no-referrer'); f.loading='lazy'; f.title='DexScreener chart — FINK / '+other;
-    f.src='https://dexscreener.com/pulsechain/'+a+EMB; ch.appendChild(f); c.appendChild(ch);
+    const ch=el('div','chart'); ch.dataset.pair=a; ch.dataset.label='FINK / '+other; c.appendChild(ch); window.__chart&&window.__chart(ch);
     // stats window
     const w=el('div','pool-win'), wh=el('div','pool-win-head');
     const lab=el('span'); const d=el('span','dot'); d.style.background='var(--green)'; lab.appendChild(d); lab.appendChild(document.createTextNode('Pool stats · live'));
