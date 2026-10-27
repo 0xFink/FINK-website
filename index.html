@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Q4Q7XIeXyqywI4cesUOYjupWQ2VZaXqDySmD1ND2snA='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OPu+DcMba9a7Vm+NXrxrrgEm6URl6ZTdUYAcBcS4IzQ='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -170,6 +170,25 @@
   .pair-card .arr{margin-right:6px}
   .pair-card.down .arr{color:var(--red)}
   .pair-card.up .arr{color:var(--green)}
+  .pool-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:16px}
+  .pool-summary > div{background:rgba(11,13,17,.92);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+  .pool-summary .k{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pool-summary .v{font-family:var(--mono);font-size:17px;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+  #pool-list > .card + .card{margin-top:16px}
+  .pool-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .pool-title h3{margin:0}
+  .pool-title .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .pool-title .tag{margin-right:0}
+  .pool-win{margin-top:14px;border:1px solid var(--line);border-radius:3px;background:#0b0d11;overflow:hidden}
+  .pool-win-head{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line-soft);
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pool-win-head .dot{display:inline-block;width:6px;height:6px;margin-right:7px;vertical-align:1px}
+  .pool-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft)}
+  .pool-stats > div{background:#0b0d11;padding:12px 14px;min-width:0}
+  .pool-stats .k{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .pool-stats .v{display:block;font-family:var(--mono);font-size:14px;color:var(--text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .pool-stats .v.pos{color:var(--green)} .pool-stats .v.neg{color:var(--red)}
+  .pool-addr{padding:10px 14px;border-top:1px solid var(--line-soft);display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:#bdb9ad;overflow-wrap:anywhere}
   .portal{text-align:center;padding:52px 26px}
   .portal-ring{width:132px;height:132px;margin:0 auto 26px;position:relative}
   .portal-ring video{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover;background:#000;animation:spin 40s linear infinite;
@@ -281,6 +300,9 @@
     .ll-intro{flex-direction:column;gap:14px}
     .ll-logo{width:64px;height:64px;flex-basis:64px}
     .chart{height:360px}
+    .pool-summary{grid-template-columns:1fr 1fr}
+    .pool-stats{grid-template-columns:1fr 1fr}
+    .pool-stats .v{font-size:13px}
     .kv dd{margin-bottom:8px}
   }
   @media (prefers-reduced-motion:reduce){.ticker-track,.portal-ring video,.dot,.qtrack{animation:none}.panel{animation:none}.quotes{overflow-x:auto}}
@@ -398,7 +420,15 @@
     <section class="panel" id="tab-liquidity" role="tabpanel">
       <p class="eyebrow">// 03 · Chart & Liquidity</p>
       <h2>Charts & <em>liquidity</em></h2>
-      <p class="lede">BaalRock (FINK) trades in two PulseX pools. The main pool is the PulseX V1 pool FINK moved into when it graduated from the pump.tires bonding curve — its liquidity is locked. A second pool pairs FINK with dMKT on PulseX V2. Live charts for both are below.</p>
+      <p class="lede">Every BaalRock (FINK) pool on PulseChain holding more than $400 of liquidity, pulled live from DexScreener and sorted largest first. Each pool has its live chart with a stats window underneath.</p>
+      <div class="pool-summary" id="pool-summary" aria-live="polite">
+        <div><span class="k">Pools over $400</span><span class="v" id="ps-count">—</span></div>
+        <div><span class="k">Total liquidity</span><span class="v" id="ps-liq">—</span></div>
+        <div><span class="k">24h volume</span><span class="v" id="ps-vol">—</span></div>
+        <div><span class="k">Updated</span><span class="v" id="ps-time">loading…</span></div>
+      </div>
+      <div id="pool-list">
+      <!-- Fallback shown only if the live pool list can't load -->
       <div class="card">
         <h3>Pool 01 · Main · FINK / WPLS</h3>
         <dl class="kv">
@@ -426,6 +456,7 @@
           <a class="btn" href="https://dexscreener.com/pulsechain/0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8" target="_blank" rel="noopener noreferrer">Open on DexScreener ↗</a>
           <button class="btn ghost" data-copy="0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8">Copy Pool Address</button>
         </div>
+      </div>
       </div>
     </section>
 
@@ -740,14 +771,15 @@
   show(location.hash.slice(1)||'overview');
 
   const toast=document.getElementById('toast');let tt;
-  document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+  document.addEventListener('click',async e=>{
+    const b=e.target.closest('[data-copy]'); if(!b) return;
     const v=b.dataset.copy;
     try{await navigator.clipboard.writeText(v)}catch(e){
       const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();
       try{document.execCommand('copy')}catch(_){} ta.remove();
     }
     toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),1600);
-  }));
+  });
 })();
 
 /* ---------------- live prices: BTC & ETH (CoinGecko, Coinbase fallback) + WPLS, dMKT, and FINK/OTR/pHEX/PLSX/eHEX in their pair coin (DexScreener) ---------------- */
@@ -839,6 +871,92 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
     const hgt=+((m.params&&m.params[0])||{}).height;
     if(hgt>80&&hgt<3000) f.style.height=Math.ceil(hgt)+'px';
   });
+})();
+
+/* ---------------- Chart & Liquidity: every FINK pool on PulseChain over $400, live from DexScreener ---------------- */
+(function(){
+  const TOKEN='0x578f94f729d41983b77a07650517479e409c329b', MIN_LIQ=400;
+  const NOTES={'0x00c7155894c7ca9a64e02dafb668adce5625cfde':[['Liquidity Locked','g'],['Graduated','a']]};
+  const EMB='?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=60';
+  const list=document.getElementById('pool-list'); if(!list) return;
+  const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||'');
+  const clean=s=>String(s==null?'':s).replace(/[^\w .\-\/$+]/g,'').slice(0,16)||'?';   // token symbols are user-chosen; keep them tame
+  const usd=v=>!isFinite(v)?'—':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(2)+'K':'$'+v.toFixed(2);
+  const num=v=>!isFinite(v)?'—':v>=1e9?(v/1e9).toFixed(2)+'B':v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':v.toLocaleString('en-US',{maximumSignificantDigits:5});
+  const px=v=>!isFinite(v)?'—':'$'+(v>=1?v.toLocaleString('en-US',{maximumFractionDigits:4}):v.toLocaleString('en-US',{maximumSignificantDigits:4}));
+  const el=(tag,cls,text)=>{const n=document.createElement(tag); if(cls)n.className=cls; if(text!=null)n.textContent=text; return n;};
+  const set=(id,v)=>{const n=document.getElementById(id); if(n) n.textContent=v;};
+  let built='';
+
+  function card(p,i){
+    const a=p.pairAddress.toLowerCase(), base=clean(p.baseToken&&p.baseToken.symbol), quote=clean(p.quoteToken&&p.quoteToken.symbol);
+    const finkIsBase=(p.baseToken&&String(p.baseToken.address).toLowerCase())===TOKEN;
+    const other=finkIsBase?quote:base;
+    const dex=clean(p.dexId).replace(/^pulsex$/i,'PulseX'), ver=(p.labels&&p.labels[0])?clean(p.labels[0]).toUpperCase():'';
+    const c=el('div','card'); c.dataset.pair=a;
+    const t=el('div','pool-title');
+    t.appendChild(el('h3',null,'Pool '+String(i+1).padStart(2,'0')+(i===0?' · Main':'')+' · FINK / '+other));
+    const tags=el('div','tags');
+    tags.appendChild(el('span','tag a',dex+(ver?' · '+ver:'')));
+    (NOTES[a]||[]).forEach(([txt,k])=>tags.appendChild(el('span','tag '+k,txt)));
+    t.appendChild(tags); c.appendChild(t);
+    const ch=el('div','chart'), f=document.createElement('iframe');
+    f.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+    f.setAttribute('referrerpolicy','no-referrer'); f.loading='lazy'; f.title='DexScreener chart — FINK / '+other;
+    f.src='https://dexscreener.com/pulsechain/'+a+EMB; ch.appendChild(f); c.appendChild(ch);
+    // stats window
+    const w=el('div','pool-win'), wh=el('div','pool-win-head');
+    const lab=el('span'); const d=el('span','dot'); d.style.background='var(--green)'; lab.appendChild(d); lab.appendChild(document.createTextNode('Pool stats · live'));
+    wh.appendChild(lab); wh.appendChild(el('span',null,'FINK / '+other)); w.appendChild(wh);
+    const g=el('div','pool-stats');
+    [['liq','Liquidity'],['price','FINK price'],['ch','24h change'],['vol','24h volume'],['fink','FINK in pool'],['other',other+' in pool'],['tx','24h trades'],['age','Created']]
+      .forEach(([k,label])=>{const b=el('div'); b.appendChild(el('span','k',label)); const v=el('span','v','—'); v.dataset.k=k; b.appendChild(v); g.appendChild(b);});
+    w.appendChild(g);
+    const ad=el('div','pool-addr'); ad.appendChild(el('span',null,a));
+    const cp=el('button','btn ghost mini','Copy'); cp.dataset.copy=a; ad.appendChild(cp); w.appendChild(ad);
+    c.appendChild(w);
+    const row=el('div','row'), op=el('a','btn','Open on DexScreener ↗');
+    op.href='https://dexscreener.com/pulsechain/'+a; op.target='_blank'; op.rel='noopener noreferrer'; row.appendChild(op); c.appendChild(row);
+    return c;
+  }
+  function fill(c,p){
+    const finkIsBase=(p.baseToken&&String(p.baseToken.address).toLowerCase())===TOKEN, L=p.liquidity||{}, T=(p.txns||{}).h24||{};
+    // FINK's USD price: direct if FINK is the base token, otherwise derived from the pair's own price
+    const priceFink=finkIsBase?+p.priceUsd:(+p.priceNative>0?+p.priceUsd/+p.priceNative:NaN);
+    const v=k=>c.querySelector('[data-k="'+k+'"]');
+    v('liq').textContent=usd(+L.usd);
+    v('price').textContent=px(priceFink);
+    const chg=+((p.priceChange||{}).h24);
+    v('ch').textContent=isFinite(chg)&&finkIsBase?(chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%':'—';
+    v('ch').className='v'+(isFinite(chg)&&finkIsBase?(chg>=0?' pos':' neg'):'');
+    v('vol').textContent=usd(+((p.volume||{}).h24));
+    v('fink').textContent=num(finkIsBase?+L.base:+L.quote);
+    v('other').textContent=num(finkIsBase?+L.quote:+L.base);
+    const nb=+T.buys||0, ns=+T.sells||0;
+    v('tx').textContent=nb+(nb===1?' buy':' buys')+' · '+ns+(ns===1?' sell':' sells');
+    v('age').textContent=p.pairCreatedAt?new Date(+p.pairCreatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+  }
+  async function load(){
+    try{
+      const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+TOKEN,{cache:'no-store'}); if(!r.ok) throw 0;
+      const d=await r.json();
+      const pools=(d.pairs||[]).filter(p=>p&&p.chainId==='pulsechain'&&isAddr(p.pairAddress)&&+((p.liquidity||{}).usd)>MIN_LIQ)
+        .sort((a,b)=>(+b.liquidity.usd)-(+a.liquidity.usd));
+      if(!pools.length) throw 0;
+      const key=pools.map(p=>p.pairAddress.toLowerCase()).join(',');
+      if(key!==built){                     // (re)build cards only when the set of pools changes
+        list.replaceChildren(...pools.map(card)); built=key;
+      }
+      pools.forEach(p=>{const c=list.querySelector('[data-pair="'+p.pairAddress.toLowerCase()+'"]'); if(c) fill(c,p);});
+      set('ps-count',String(pools.length));
+      set('ps-liq',usd(pools.reduce((s,p)=>s+(+p.liquidity.usd||0),0)));
+      set('ps-vol',usd(pools.reduce((s,p)=>s+(+((p.volume||{}).h24)||0),0)));
+      set('ps-time',new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
+    }catch(e){
+      if(!built) set('ps-time','showing saved list');
+    }
+  }
+  load(); setInterval(()=>{if(!document.hidden)load()},60000);
 })();
 
 /* ---------------- sacred geometry: neon icosahedrons tumbling and bouncing softly off each other ----------------
