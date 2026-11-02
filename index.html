@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FP/NaNx2EDXnEQFlH0iWqsL8FZ1c2SJ4IYuR9B86wSs='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RtKl3moAaljLsw3F0rCvplxMMwLFoFyUWaoHcGw61Ps='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -481,6 +481,20 @@
         <div class="row">
           <a class="btn" href="https://dexscreener.com/pulsechain/0xec14c8ac4a0bc405443f3bb40c01baa0e81459ee" target="_blank" rel="noopener noreferrer">Open on DexScreener ↗</a>
           <button class="btn ghost" data-copy="0xec14c8ac4a0bc405443f3bb40c01baa0e81459ee">Copy Pool Address</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Pool 04 · FINK / FUPA</h3>
+        <dl class="kv">
+          <dt>Pair</dt><dd>FINK / FUPA</dd>
+          <dt>Exchange</dt><dd>PulseX</dd>
+          <dt>Status</dt><dd><span class="tag a">Active</span></dd>
+          <dt>Pool Address</dt><dd style="font-family:var(--mono);font-size:13.5px">0xb4d31986be46aa36853b056116db2223bdd5ace3</dd>
+        </dl>
+        <div class="chart" data-pair="0xb4d31986be46aa36853b056116db2223bdd5ace3"></div>
+        <div class="row">
+          <a class="btn" href="https://dexscreener.com/pulsechain/0xb4d31986be46aa36853b056116db2223bdd5ace3" target="_blank" rel="noopener noreferrer">Open on DexScreener ↗</a>
+          <button class="btn ghost" data-copy="0xb4d31986be46aa36853b056116db2223bdd5ace3">Copy Pool Address</button>
         </div>
       </div>
       </div>
@@ -962,6 +976,7 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
   // Each pinned pool is also read straight from the chain (RPC) if DexScreener doesn't return it.
   const PINNED=[
     '0xec14c8ac4a0bc405443f3bb40c01baa0e81459ee',   // FINK / PITTBULL
+    '0xb4d31986be46aa36853b056116db2223bdd5ace3',   // FINK / FUPA
   ];
   const list=document.getElementById('pool-list'); if(!list) return;
   const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||'');
