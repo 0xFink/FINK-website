@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RtKl3moAaljLsw3F0rCvplxMMwLFoFyUWaoHcGw61Ps='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ILKOfE+APJAEcbmdTQxwvnbxp7XRlER+IK/cMcxkx74='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -899,7 +899,7 @@
       if(fp){
         const n=+fp.priceNative, u=+fp.priceUsd, mc=+(fp.marketCap||fp.fdv);
         const big=v=>v.toLocaleString('en-US',{maximumFractionDigits:v>=100?0:2});
-        if(isFinite(mc)) txt('ov-mcap','$'+big(mc));
+        if(isFinite(mc)&&!window.__mcapOnChain){ txt('ov-mcap','$'+big(mc)); txt('ov-mcap-s','FINK · USD · via DexScreener'); }
         if(isFinite(n)){ txt('ov-pls',n.toLocaleString('en-US',{maximumFractionDigits:4})+' PLS');
                          txt('ov-1m',big(n*1e6)+' WPLS'); }
         if(isFinite(u)){ txt('ov-usd','≈ $'+sig(u)+' per FINK'); txt('ov-1m-usd','≈ $'+big(u*1e6)); }
@@ -1107,6 +1107,55 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
     }
   }
   load(); setInterval(()=>{if(!document.hidden)load()},60000);
+})();
+
+/* ---------------- Overview market cap: read straight from PulseChain via public RPC ----------------
+   market cap = FINK totalSupply() × FINK price in PLS (FINK/WPLS pool reserves)
+                × PLS price in DAI (WPLS/DAI pool reserves)                                   */
+(function(){
+  const RPCS=['https://rpc.pulsechain.com','https://pulsechain-rpc.publicnode.com'];
+  const FINK='0x578f94f729d41983b77a07650517479e409c329b', WPLS='0xa1077a294dde1b09bb078844df40758a5d0f9a27';
+  const FINK_POOL='0x00c7155894c7ca9a64e02dafb668adce5625cfde', PLS_DAI='0xe56043671df55de5cdf8459710433c10324de0ae';
+  const call=(id,to,data)=>({jsonrpc:'2.0',id,method:'eth_call',params:[{to,data},'latest']});
+  const word=(hex,i)=>BigInt('0x'+(hex.slice(2+64*i,2+64*(i+1))||'0'));
+  const addr=hex=>'0x'+hex.slice(-40).toLowerCase();
+  const toNum=(v,dec)=>Number(v)/10**dec;
+  async function rpc(batch){
+    for(const u of RPCS){
+      try{
+        const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(batch),cache:'no-store'});
+        if(!r.ok) continue;
+        const out=await r.json(); if(!Array.isArray(out)) continue;
+        const by={}; out.forEach(x=>by[x.id]=x.result);
+        if(batch.every(b=>typeof by[b.id]==='string'&&by[b.id].length>2)) return by;
+      }catch(_){}
+    }
+    throw new Error('rpc');
+  }
+  async function mcap(){
+    try{
+      const r=await rpc([
+        call(1,FINK,'0x18160ddd'),      // totalSupply()
+        call(2,FINK,'0x313ce567'),      // decimals()
+        call(3,FINK_POOL,'0x0902f1ac'), // getReserves()
+        call(4,FINK_POOL,'0x0dfe1681'), // token0()
+        call(5,PLS_DAI,'0x0902f1ac'),
+        call(6,PLS_DAI,'0x0dfe1681')]);
+      const dec=Number(word(r[2],0))||18;
+      const supply=toNum(word(r[1],0),dec);
+      const f0=word(r[3],0), f1=word(r[3],1), finkIs0=addr(r[4])===FINK;
+      const rFink=toNum(finkIs0?f0:f1,dec), rPls=toNum(finkIs0?f1:f0,18);
+      const p0=word(r[5],0), p1=word(r[5],1), wplsIs0=addr(r[6])===WPLS;
+      const rW=toNum(wplsIs0?p0:p1,18), rDai=toNum(wplsIs0?p1:p0,18);
+      if(!(supply>0&&rFink>0&&rPls>0&&rW>0&&rDai>0)) return;
+      const usd=supply*(rPls/rFink)*(rDai/rW);
+      if(!isFinite(usd)) return;
+      window.__mcapOnChain=true;
+      document.querySelectorAll('[data-id="ov-mcap"]').forEach(e=>e.textContent='$'+usd.toLocaleString('en-US',{maximumFractionDigits:usd>=100?0:2}));
+      document.querySelectorAll('[data-id="ov-mcap-s"]').forEach(e=>e.textContent=supply.toLocaleString('en-US',{maximumFractionDigits:0})+' FINK · on-chain via PulseChain');
+    }catch(_){}
+  }
+  mcap(); setInterval(()=>{if(!document.hidden)mcap()},60000);
 })();
 
 /* ---------------- sacred geometry: neon icosahedrons tumbling and bouncing softly off each other ----------------
