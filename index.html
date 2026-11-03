@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zs0YPZM6o0jUZ41DuBpR4LMNFx2m2HTMYKDzzoo2+2M='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4Byj6FYjK5oWpkumDd61q2RuhX4qYuBx9YnJbSd8crY='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -958,12 +958,15 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
 
 /* ---------------- Chart & Liquidity: FINK pools on PulseChain, live from DexScreener with an on-chain (RPC) fallback ---------------- */
 (function(){
-  const TOKEN='0x578f94f729d41983b77a07650517479e409c329b', MIN_LIQ=400;
+  const TOKEN='0x578f94f729d41983b77a07650517479e409c329b';
   const NOTES={'0x00c7155894c7ca9a64e02dafb668adce5625cfde':[['Liquidity Locked','g'],['Graduated','a']]};
-  // Pools that always show, even when DexScreener's token search leaves them out or has no USD figure for them
-  // (common for FINK/token pairs where neither side is WPLS or a stablecoin, e.g. FINK/PITTBULL).
-  // Each pinned pool is also read straight from the chain (RPC) if DexScreener doesn't return it.
+  // OFFICIAL POOLS — the only pools this page will ever list. Anyone can create a FINK pool against a token
+  // they named themselves (e.g. "CLAIM" or "AIRDROP"), so pools found by DexScreener's token search are NOT
+  // shown unless their address is in this list. To list a new pool, add its address here.
+  // Each official pool is also read straight from the chain (RPC) if DexScreener doesn't return it.
   const PINNED=[
+    '0x00c7155894c7ca9a64e02dafb668adce5625cfde',   // FINK / WPLS (main)
+    '0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8',   // FINK / dMKT
     '0xec14c8ac4a0bc405443f3bb40c01baa0e81459ee',   // FINK / PITTBULL
     '0xb4d31986be46aa36853b056116db2223bdd5ace3',   // FINK / FUPA
   ];
@@ -1065,12 +1068,12 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
     try{
       let d={};
       try{ const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+TOKEN,{cache:'no-store'}); if(r.ok) d=await r.json(); }catch(_){}
-      let all=(d.pairs||[]).filter(p=>p&&p.chainId==='pulsechain'&&isAddr(p.pairAddress));
+      let all=(d.pairs||[]).filter(p=>p&&p.chainId==='pulsechain'&&isAddr(p.pairAddress)&&PINNED.includes(p.pairAddress.toLowerCase()));
       // fetch any pinned pool the token search didn't return
       const have=new Set(all.map(p=>p.pairAddress.toLowerCase())), miss=PINNED.filter(a=>!have.has(a));
       if(miss.length){ try{
         const r2=await fetch('https://api.dexscreener.com/latest/dex/pairs/pulsechain/'+miss.join(','),{cache:'no-store'});
-        if(r2.ok){const d2=await r2.json(); all=all.concat([].concat(d2.pairs||d2.pair||[]).filter(p=>p&&isAddr(p.pairAddress)));}
+        if(r2.ok){const d2=await r2.json(); all=all.concat([].concat(d2.pairs||d2.pair||[]).filter(p=>p&&isAddr(p.pairAddress)&&PINNED.includes(p.pairAddress.toLowerCase())));}
       }catch(_){} }
       // still missing → read those pools straight from the chain
       const got=new Set(all.map(p=>p.pairAddress.toLowerCase())), still=PINNED.filter(a=>!got.has(a));
@@ -1079,7 +1082,7 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
       const priced=all.filter(p=>isFinkBase(p)&&+p.priceUsd>0&&+((p.liquidity||{}).usd)>0)
         .sort((a,b)=>(+b.liquidity.usd)-(+a.liquidity.usd));
       if(priced.length) finkUsd=+priced[0].priceUsd;
-      const pools=all.filter(p=>PINNED.includes(p.pairAddress.toLowerCase())||liqUsd(p)>MIN_LIQ)
+      const pools=all.filter(p=>PINNED.includes(p.pairAddress.toLowerCase()))
         .sort((a,b)=>(liqUsd(b)||0)-(liqUsd(a)||0));
       if(!pools.length) throw 0;
       const key=pools.map(p=>p.pairAddress.toLowerCase()+(p._rpc?'*':'')).join(',');
