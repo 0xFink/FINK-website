@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- Security policy: only the inline script below (matched by its hash) may run. If you edit the script block at the bottom, the hash must be updated or the script will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VkmvitxgxhGr5bnf9Hq+iUUYBG0lEoELZ+w1L67HSNo='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Xqe5FEedVmDfWeV5ReDW0ILx91p/nX97/JPoMwx3lM8='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; media-src data:; connect-src https://api.coingecko.com https://api.exchange.coinbase.com https://api.dexscreener.com https://rpc.pulsechain.com https://pulsechain-rpc.publicnode.com; frame-src https://dexscreener.com https://platform.twitter.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070a">
@@ -971,6 +971,8 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
     '0x1e0d1e6871bd87b17285701f8d46e07adcd33fd8',   // FINK / dMKT
     '0xec14c8ac4a0bc405443f3bb40c01baa0e81459ee',   // FINK / PITTBULL
     '0xb4d31986be46aa36853b056116db2223bdd5ace3',   // FINK / FUPA
+    '0x79758e6d9f40456555a660064fcc06bceea39bb4',   // FINK / LBRTY
+    '0x1c228b89b3e4b730ec6d0a170a9bd895a12e3d9f',   // FINK / OTR
   ];
   const list=document.getElementById('pool-list'); if(!list) return;
   const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||'');
