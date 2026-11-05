@@ -100,7 +100,7 @@
   .live-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:22px 0 10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
   .live-head .lsrc{color:var(--muted);letter-spacing:.08em;text-transform:none}
   .ldot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2.4s infinite}
-  .live-grid{grid-template-columns:repeat(3,1fr)}
+  .live-grid{grid-template-columns:repeat(4,1fr)}
   .card::before{content:"";position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:1px solid var(--gold);border-left:1px solid var(--gold)}
   .card::after{content:"";position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:1px solid var(--gold);border-right:1px solid var(--gold)}
   .card h3{font-size:13px;font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:14px}
@@ -279,7 +279,6 @@
     .card{padding:18px;backdrop-filter:none;background:rgba(14,16,20,.92)}
     .card + .card{margin-top:12px}
     .grid{grid-template-columns:1fr 1fr;gap:10px}
-    .live-grid .card:last-child{grid-column:1/-1}
     .grid > .card:last-child:nth-child(odd){grid-column:1/-1}
     .stat .k{font-size:9.5px;letter-spacing:.14em}
     .stat .v{font-size:15.5px;margin-top:6px;word-break:break-word}
@@ -369,6 +368,7 @@
       <div class="live-head"><span class="ldot"></span>Live market <span class="lsrc">· FINK/WPLS pool on DexScreener · updates every 60s</span></div>
       <div class="grid live-grid">
         <div class="card stat"><div class="k">Market Cap</div><div class="v" data-id="ov-mcap">—</div><div class="s" data-id="ov-mcap-s">FINK · USD</div></div>
+        <div class="card stat"><div class="k">Total Liquidity</div><div class="v" data-id="ov-liq">—</div><div class="s">All FINK pools · USD</div></div>
         <div class="card stat"><div class="k">FINK / WPLS Price</div><div class="v" data-id="ov-pls">—</div><div class="s" data-id="ov-usd">PLS per FINK</div></div>
         <div class="card stat"><div class="k">1,000,000 FINK =</div><div class="v" data-id="ov-1m">—</div><div class="s" data-id="ov-1m-usd">in WPLS</div></div>
       </div>
@@ -1095,7 +1095,9 @@ document.querySelectorAll('video[data-src-from]').forEach(v=>{
       }
       pools.forEach(p=>{const c=list.querySelector('[data-pair="'+p.pairAddress.toLowerCase()+'"]'); if(c) fill(c,p);});
       set('ps-count',String(pools.length));
-      set('ps-liq',usd(pools.reduce((s,p)=>s+(liqUsd(p)||0),0)));
+      const totLiq=usd(pools.reduce((s,p)=>s+(liqUsd(p)||0),0));
+      set('ps-liq',totLiq);
+      document.querySelectorAll('[data-id="ov-liq"]').forEach(e=>e.textContent=totLiq);   // same number on the Overview
       set('ps-vol',usd(pools.reduce((s,p)=>s+(+((p.volume||{}).h24)||0),0)));
       set('ps-time',new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
     }catch(e){
