@@ -99,6 +99,7 @@ pre{background:var(--code);border-radius:8px;padding:10px;font:12px var(--mono);
     <button id="bPool" class="ghost">Check pool</button>
     <div class="kv" id="poolOut"></div>
     <button id="bTokU" disabled>setToken(USDG)</button>
+    <p class="help">USDG can be allowed any time after the module is entered above; it needs no pool check.</p>
     <button id="bTokT" disabled>setToken(token)</button>
     <button id="bSetPool" disabled>setPool</button>
   </section>
@@ -728,8 +729,8 @@ const go = fn => async () => { try{ await fn(); }catch(e){ log('ERROR: '+(e.shor
 function refreshButtons(){
   const hasMod = E.isAddress($('iMod').value.trim());
   const ready = !!signer && hasMod;
-  ['bPause','bUnpause','bAgent','bCapU'].forEach(b=>$(b).disabled=!ready);
-  ['bTokU','bTokT','bSetPool','bCapT'].forEach(b=>$(b).disabled=!(ready && pool.ok));
+  ['bPause','bUnpause','bAgent','bCapU','bTokU'].forEach(b=>$(b).disabled=!ready);
+  ['bTokT','bSetPool','bCapT'].forEach(b=>$(b).disabled=!(ready && pool.ok));
   if(hasMod){
     const m=E.getAddress($('iMod').value.trim());
     $('vEnTo').textContent = E.isAddress($('iSafe').value.trim()) ? E.getAddress($('iSafe').value.trim())+'  (your Safe itself)' : 'your Safe address';
