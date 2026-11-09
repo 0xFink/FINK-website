@@ -94,7 +94,7 @@ pre{background:var(--code);border-radius:8px;padding:10px;font:12px var(--mono);
   <section>
     <h2><span class="n">3</span>Allow your pool and tokens</h2>
     <p class="help">The bot runs a USDG / token pool at 1% fee, tick spacing 100, no hooks, with USDG as token0. This checks all of that.</p>
-    <label for="iTok">Token you will LP</label>
+    <label for="iTok">Token you pair with USDG (not USDG itself)</label>
     <input id="iTok" placeholder="0x…" autocomplete="off">
     <button id="bPool" class="ghost">Check pool</button>
     <div class="kv" id="poolOut"></div>
@@ -824,7 +824,8 @@ $('bEnCheck').onclick = go(async()=>{
 // ── pool ───────────────────────────────────────────────────────────────────
 $('bPool').onclick = go(async()=>{
   need(); await onChain(); const t=addr('iTok'); store.set('token',t); pool={};
-  if(BigInt(USDG)>=BigInt(t)){ set('poolOut',[['Orientation','USDG is not token0 for this token. The bot cannot run this pool as-is.','bad']]); refreshButtons(); return; }
+  if(BigInt(USDG)===BigInt(t)){ set('poolOut',[['Not here','That is the USDG address. Enter the token you pair WITH USDG. To allow USDG itself, just click setToken(USDG) below.','warn']]); refreshButtons(); return; }
+  if(BigInt(USDG)>BigInt(t)){ set('poolOut',[['Orientation','USDG is not token0 for this token. The bot cannot run this pool as-is.','bad']]); refreshButtons(); return; }
   const tc=new E.Contract(t,ERC20,provider);
   const [dec,sym]=await Promise.all([tc.decimals(),tc.symbol().catch(()=>'TOKEN')]);
   const A=E.AbiCoder.defaultAbiCoder();
