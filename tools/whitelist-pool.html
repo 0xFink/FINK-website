@@ -39,9 +39,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <input id="iMod" placeholder="0x… (the module you deployed)" autocomplete="off">
     <label for="iTok">Token you pair with USDG (not USDG itself)</label>
     <input id="iTok" placeholder="0x…" autocomplete="off">
-    <button id="bCheck" class="ghost" disabled>Check pool</button>
-    <div class="kv" id="out"></div>
     <button id="bGo" disabled>Whitelist pool</button>
+    <button id="bCheck" class="ghost" disabled>Check</button>
+    <div class="kv" id="out"></div>
     <div id="msg"></div>
   </section>
 </main>
@@ -88,7 +88,7 @@ const st={get:k=>{try{return localStorage.getItem('alp.'+k)||''}catch(e){return 
 let provider,signer,account,pool=null;
 const go=fn=>async()=>{try{await fn()}catch(e){msg(e.shortMessage||e.reason||e.message,'bad')}};
 const addr=(id,what)=>{const v=$(id).value.trim();if(!E.isAddress(v))throw new Error('Enter '+what+'.');return E.getAddress(v);};
-function refresh(){const ok=!!signer&&E.isAddress($('iMod').value.trim())&&E.isAddress($('iTok').value.trim());$('bCheck').disabled=!ok;$('bGo').disabled=!(ok&&pool&&pool.ok);}
+function refresh(){const ok=!!signer&&E.isAddress($('iMod').value.trim())&&E.isAddress($('iTok').value.trim());$('bCheck').disabled=!ok;$('bGo').disabled=!ok;}
 async function onChain(){if((await provider.getNetwork()).chainId!==CHAIN)throw new Error('Rabby is not on Robinhood Chain. Click Switch to Robinhood Chain.');}
 
 $('bConnect').onclick=go(async()=>{
@@ -135,7 +135,9 @@ async function check(){
 }
 $('bCheck').onclick=go(async()=>{await check();msg('');});
 $('bGo').onclick=go(async()=>{
-  await check(); if(!pool) return;
+  msg('Checking…'); await check();
+  if(!pool){msg('Fix the item marked in red above, then click Whitelist pool again.','bad');return;}
+  if(!pool.ok)throw new Error('This wallet is not an owner of the Safe, so the module will refuse it. Switch to your owner wallet in Rabby.');
   if(pool.already){msg('This pool is already whitelisted. Nothing to do.','ok');return;}
   const c=new E.Contract(addr('iMod','your module address'),ABI,signer);
   try{await c.setPool.staticCall(pool.pid,true);}catch(e){throw new Error('This would fail: '+(e.reason||e.shortMessage||e.message));}
